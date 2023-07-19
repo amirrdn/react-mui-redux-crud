@@ -1,0 +1,8 @@
+#menu-appbar-notiv .MuiPaper-root.MuiPaper-elevation8{
+    left: unset !important;
+    right: 16px !important;
+}
+#menu-appbar .MuiMenu-paper{
+  left: unset !important;
+  right: 16px !important;
+}
