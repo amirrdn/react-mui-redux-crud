@@ -3,6 +3,7 @@ import {
     RETRIEVE_CRUD,
     UPDATE_CRUD,
     DELETE_CRUD,
+    DELETE_ALL_CRUD
   } from "../actions/types";
   
   const initialState = [];
@@ -22,7 +23,13 @@ import {
   
       case DELETE_CRUD:
         return cruds;
-  
+      
+      case DELETE_ALL_CRUD:
+        return [cruds, payload];
+
+      case DELETE_ALL_CRUD:
+        return [];
+
       default:
         return cruds;
     }

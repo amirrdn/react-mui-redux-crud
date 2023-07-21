@@ -3,7 +3,6 @@ import './App.css';
 import ResponsiveDrawer from './layout/layout';
 import { Suspense, useEffect, useState } from 'react';
 import Login from './pages/login';
-import globalvariable from './service/globalvariable'
 
 
 function App(props) {
@@ -14,7 +13,6 @@ function App(props) {
       const dt = {
         token: localStorage.getItem("access_token"),
         users: JSON.parse(localStorage.getItem("user")),
-        url: globalvariable.getUrl(),
         prevurl: '',
         permission: localStorage.getItem('permission').split(",")
       }
@@ -34,9 +32,7 @@ function App(props) {
       localStorage.setItem('permission', props.data);
       const newobj = {
         permission: props.data,
-        token: localStorage.getItem("access_token"),
         users: JSON.parse(localStorage.getItem("user")),
-        url: globalvariable.getUrl(),
         prevurl: '',
       }
       setStores(newobj);

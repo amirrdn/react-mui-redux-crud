@@ -3,13 +3,14 @@ import {
     RETRIEVE_CRUD,
     UPDATE_CRUD,
     DELETE_CRUD,
+    DELETE_ALL_CRUD
   } from "./types";
   
   import CrudDataService from "../service/crud.service";
   
-  export const createCrud = (title, priority, is_active, activity_group_id) => async (dispatch) => {
+  export const createCrud = (data) => async (dispatch) => {
     try {
-      const res = await CrudDataService.create({ title, priority, is_active, activity_group_id });
+      const res = await CrudDataService.create(data);
   
       dispatch({
         type: CREATE_CRUD,
@@ -60,6 +61,21 @@ import {
       });
     } catch (err) {
       console.log(err);
+    }
+  };
+
+  export const deleteAllCrud = (data) => async (dispatch) => {
+    try {
+      const res = await CrudDataService.deleteAll(data);
+  
+      dispatch({
+        type: DELETE_ALL_CRUD,
+        payload: res.data,
+      });
+  
+      return Promise.resolve(res.data);
+    } catch (err) {
+      return Promise.reject(err);
     }
   };
   

@@ -6,3 +6,6 @@
   left: unset !important;
   right: 16px !important;
 }
+table tbody.MuiTableBody-root tr.selected{
+  background-color: #d9c9c9;
+}

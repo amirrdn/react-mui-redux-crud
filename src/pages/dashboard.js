@@ -14,13 +14,16 @@ import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormLabel from '@mui/material/FormLabel';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import Checkbox from '@mui/material/Checkbox';
 import { message, Popconfirm } from 'antd';
 import { connect } from "react-redux";
 import {
     retrieveCruds,
     createCrud,
     updateCruds,
-    deleteCruds
+    deleteCruds,
+    deleteAllCrud
   } from "../actions/crud";
 import { useEffect, useState } from 'react';
 import Button from '@mui/material/Button';
@@ -30,6 +33,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { makeStyles } from "@material-ui/core/styles";
+import { useTheme } from '@mui/material/styles';
 
 const style = makeStyles({
     buttonright: {
@@ -39,12 +43,16 @@ const style = makeStyles({
         marginRight: '3px !important'
     }
   });
-
-const Dashboard = (props) => {
-    const [items, setItem] = useState(null);
-    const [vform, setvForm] = useState(null);
-    const [open, setOpen] = useState(false);
-    const classes = style();
+  
+  const Dashboard = (props) => {
+      const [items, setItem] = useState(null);
+      const [vform, setvForm] = useState(null);
+      const [open, setOpen] = useState(false);
+      const classes = style();
+      const theme = useTheme();
+      const [isCheckAll, setIsCheckAll] = useState(false);
+  const [isCheck, setIsCheck] = useState([]);
+    const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
 
     useEffect( () => {
         props.retrieveCruds();
@@ -53,13 +61,20 @@ const Dashboard = (props) => {
     useEffect(() => {
         setItem(props.cruds)
     }, [])
-    const submitForm = (event) => {
+    const submitForm = async (event) => {
         event.preventDefault();
         if(vform.action){
             updateData();
             return false;
         }
-        props.createCrud(vform.title, vform.priority, vform.is_active, 71551).then((response) => {
+        const data = {
+            fullname: vform.fullname,
+            gender: vform.gender,
+            city: vform.city,
+            address: vform.address,
+            text: vform.address
+        }
+        await props.createCrud(data).then((response) => {
             props.retrieveCruds();
             setOpen(false)
         });
@@ -67,7 +82,10 @@ const Dashboard = (props) => {
     const onChangeForm = (e) => {
         setvForm({...vform,[e.target.name]: e.target.value})
     }
-    const handleClickOpen = () => {
+    const handleClickOpen = (val) => {
+        if(val === 'create'){
+            setvForm(null)
+        }
       setOpen(true);
     };
 
@@ -76,9 +94,10 @@ const Dashboard = (props) => {
     };
     const editForm = (data) => {
         setvForm({
-            title: data.title,
-            priority: data.priority,
-            is_active: data.is_active,
+            fullname: data.fullname,
+            gender: data.gender,
+            city: data.city,
+            address: data.address,
             id: data.id,
             action: 'edit'
         })
@@ -86,17 +105,16 @@ const Dashboard = (props) => {
     }
     const updateData = async () => {
         const data = {
-            title: vform.title,
-            priority: vform.priority,
-            is_active: vform.is_active,
-            email: '4mir.rdn@gmail.com',
-            activity_group_id: '71551'
+            fullname: vform.fullname,
+            gender: vform.gender,
+            city: vform.city,
+            address: vform.address,
+            text: vform.address
         }
         props.updateCruds(vform.id, data).then(() => {
             setOpen(false)
             props.retrieveCruds();
         })
-        console.log('ypda')
         
     }
     const confirm = (id) => {
@@ -104,7 +122,6 @@ const Dashboard = (props) => {
         message.success('Click on Yes');
       };
       const cancel = (e) => {
-        console.log(e);
         message.error('Click on No');
       };
     const DropCrud = (id) => {
@@ -112,41 +129,80 @@ const Dashboard = (props) => {
             props.retrieveCruds();
         })
     }
+    const DeletedSelectedData = () => {
+        props.deleteAllCrud(isCheck).then(() =>{
+            props.retrieveCruds();
+        })
+    }
+    const handleSelectAll = e => {
+        setIsCheckAll(!isCheckAll);
+        setIsCheck(props.cruds.data.map(li => li.id.toString()));
+        if (isCheckAll) {
+          setIsCheck([]);
+        }
+      };
+    
+      const handleClickCheck = e => {
+        const { id, checked } = e.target;
+        setIsCheck([...isCheck, id]);
+        if (!checked) {
+          setIsCheck(isCheck.filter(item => item !== id));
+        }
+      };
     return(<>
-            <Button variant="outlined" className={classes.buttonright} onClick={handleClickOpen}>
-                Create
-            </Button>
+            <div className={classes.buttonright}>
+                <Button variant="outlined" className={classes.paddingRIghtbtn} onClick={(e) => DeletedSelectedData()}>
+                    Delete
+                </Button>&nbsp;
+                <Button variant="outlined"  onClick={(e) => handleClickOpen('create')}>
+                    Create
+                </Button>
+
+            </div>
         <TableContainer component={Paper}>
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
                     <TableRow>
-                        <TableCell>Title</TableCell>
-                        <TableCell>Priority</TableCell>
-                        <TableCell>Active</TableCell>
+                        <TableCell>
+                        <Checkbox
+                        checked={isCheckAll}
+                        onChange={handleSelectAll}
+                        inputProps={{ 'aria-label': 'controlled' }}
+                        />
+                        </TableCell>
+                        <TableCell>Fullname</TableCell>
+                        <TableCell>Gender</TableCell>
+                        <TableCell>City</TableCell>
+                        <TableCell>Address</TableCell>
                         <TableCell>Action</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                {props.cruds && props.cruds.map((row) => (
+                {props.cruds.data && props.cruds.data.map((row) => (
                     <TableRow
-                    key={row.title}
+                    className={`${isCheck.includes(row.id.toString()) ? 'selected' : ''}`}
+                    key={row.id}
                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                     >
+                        <TableCell component="th" scope="row">
+                            <Checkbox
+                                name={row.id}
+                                id={row.id}
+                                key={row.id}
+                                checked={isCheck.includes(row.id.toString())}
+                                onChange={handleClickCheck}
+                                inputProps={{ 'aria-label': 'controlled' }}
+                            />
+                        </TableCell>
                     <TableCell component="th" scope="row">
-                        {row.title}
+                        {row.fullname}
                     </TableCell>
-                    <TableCell>{row.priority}</TableCell>
+                    <TableCell>{row.gender === '1' ? 'Male' : 'Female'}</TableCell>
                     <TableCell>
-                    <FormControl>
-                    <RadioGroup
-                        aria-labelledby="demo-radio-buttons-group-label"
-                        defaultValue="female"
-                        name="radio-buttons-group"
-                        value={row.is_active}
-                    >
-                        <FormControlLabel value={1} control={<Radio />}  />
-                    </RadioGroup>
-                    </FormControl>
+                        {row.city}
+                    </TableCell>
+                    <TableCell>
+                        {row.address}
                     </TableCell>
                     <TableCell>
                     <Button variant="outlined" className={classes.paddingRIghtbtn} onClick={(e) => editForm(row)}>
@@ -172,7 +228,7 @@ const Dashboard = (props) => {
                 </TableBody>
             </Table>
         </TableContainer>
-        <Dialog open={open} onClose={handleClose}>
+        <Dialog open={open} onClose={handleClose} fullScreen={fullScreen}>
             <Box
                 component="form"
                 sx={{
@@ -184,52 +240,65 @@ const Dashboard = (props) => {
             >
             <DialogTitle>
                 {
-                    vform && vform.action ? vform.title : 'Create New'
+                    vform && vform.action ? vform.fullname : 'Create New'
                 }
             </DialogTitle>
             <DialogContent>
+            <FormControl fullWidth>
             <TextField
                 autoFocus
                 margin="dense"
-                id="title"
-                label="Title"
+                id="fullname"
+                label="Fullname"
                 type="text"
                 fullWidth
                 variant="standard"
-                name="title"
+                name="fullname"
                 onChange={onChangeForm}
-                defaultValue={vform === null ? '' : vform.title}
+                defaultValue={vform === null ? '' : vform.fullname}
             />
-             <FormControl fullWidth sx={{ m: 1 }} size="small">
-                <InputLabel id="Priority-label">Priority</InputLabel>
-            <Select
-                labelId="priority-label"
-                id="priority"
-                label="Priority"
-                onChange={onChangeForm}
-                name='priority'
-                value={vform === null ? '' : vform.priority}
-            >
-                <MenuItem  defaultValue={vform === null ? '' : vform.priority}>
-                <em>None</em>
-                </MenuItem>
-                <MenuItem value='vary Hhgh'>Vary High</MenuItem>
-                <MenuItem value='low'>Low</MenuItem>
-                <MenuItem value='high'>High</MenuItem>
-                <MenuItem value='medium'>Medium</MenuItem>
-            </Select>
             </FormControl>
             <FormControl fullWidth>
-            <FormLabel id="is-active-group-label">Gender</FormLabel>
-            <RadioGroup
-                aria-labelledby="is_active-group-label"
-                defaultValue={vform === null ? 0 : vform.is_active}
-                name="is_active"
-                onChange={onChangeForm}
-            >
-                <FormControlLabel value={1} control={<Radio />} label="Active" />
-                <FormControlLabel value={0} control={<Radio />} label="Non Active" />
-            </RadioGroup>
+                <FormLabel id="is-active-group-label">Gender</FormLabel>
+                <RadioGroup
+                    aria-labelledby="is_active-group-label"
+                    defaultValue={vform === null ? 1 : vform.gender}
+                    name="gender"
+                    onChange={onChangeForm}
+                >
+                    <FormControlLabel value={1} control={<Radio />} label="Male" />
+                    <FormControlLabel value={2} control={<Radio />} label="Female" />
+                </RadioGroup>
+            </FormControl>
+            <FormControl fullWidth>
+                <TextField
+                    autoFocus
+                    margin="dense"
+                    id="city"
+                    label="City"
+                    type="text"
+                    fullWidth
+                    variant="standard"
+                    name="city"
+                    onChange={onChangeForm}
+                    defaultValue={vform === null ? '' : vform.city}
+                />
+            </FormControl>
+            <FormControl fullWidth>
+                <TextField
+                    margin="dense"
+                    id="addressl"
+                    label="Address"
+                    type="text"
+                    fullWidth
+                    variant="standard"
+                    name="address"
+                    multiline
+                    rows={2}
+                    maxRows={4}
+                    onChange={onChangeForm}
+                    defaultValue={vform === null ? '' : vform.address}
+                />
             </FormControl>
             </DialogContent>
             <DialogActions>
@@ -246,7 +315,7 @@ const Dashboard = (props) => {
 }
 const mapStateToProps = (state) => {
     return {
-        cruds: state.cruds.todo_items,
+        cruds: state.cruds,
     };
   };
   
@@ -254,5 +323,6 @@ const mapStateToProps = (state) => {
     retrieveCruds,
     deleteCruds,
     createCrud,
-    updateCruds
+    updateCruds,
+    deleteAllCrud
   })(Dashboard);

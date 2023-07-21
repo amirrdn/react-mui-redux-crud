@@ -2,29 +2,41 @@ import http from "../http-common";
 
 class CrudDataService {
   getAll() {
-    return http.get("/activity-groups/71551");
+    return http.get("/contact");
   }
 
   get(id) {
-    return http.get(`/tutorials/${id}`);
+    return http.get(`/contact/${id}`);
   }
 
   create(data) {
-    return http.post("/todo-items", data);
+    return http.post("/contact", data);
   }
 
   update(id, data) {
-    return http.patch(`/todo-items/${id}`, data);
+    return http.patch(`/contact/${id}`, data);
   }
 
   delete(id) {
-    return http.delete(`/todo-items/${id}`);
+    return http.delete(`/contact/${id}`);
   }
 
-  deleteAll() {
-    return http.delete(`/tutorials`);
-  }
+  deleteAll(data) {
+    let id;
+    data.forEach((b,index) =>{
+      if (index + 1 === data.length){ 
+        id += 'id[$in]='+b;
+      }else{
+        id += 'id[$in]='+b+'&';
+      }
 
+    })
+    if(id !== undefined){
+      let string = id.replace('undefined', '');
+      return http.delete(`/contact?${string}`);
+
+    }
+  }
 }
 
 export default new CrudDataService();
